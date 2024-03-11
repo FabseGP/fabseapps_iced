@@ -7,7 +7,7 @@ steps:
     image: debian:sid-slim
     commands:
       - apt-get update
-      - apt-get install -y curl libxkbcommon-dev mold build-essential lld clang
+      - apt-get install -y curl libxkbcommon-dev mold build-essential lld clang llvm
       - curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
       - export PATH="$HOME/.cargo/bin:$PATH"
       - rustup toolchain install nightly
