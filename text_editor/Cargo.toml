@@ -9,7 +9,7 @@ license = "AGPL-3.0-or-later"
 
 [dependencies]
 iced = { version = "0", features = ["debug", "highlighter", "tokio"] }
-rfd = { version = "0" }
+rfd = { version = "0", default-features = false, features = ["tokio", "xdg-portal"] }
 tokio = { version = "1", features = ["fs"] }
 
 [profile.release]

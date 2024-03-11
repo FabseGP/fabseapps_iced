@@ -7,7 +7,7 @@ steps:
     image: debian:sid-slim
     commands:
       - apt-get update
-      - apt-get install -y curl libxkbcommon-dev libgtk-3-dev mold build-essential lld
+      - apt-get install -y curl libxkbcommon-dev libgtk-3-dev mold build-essential lld clang
       - curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
       - export PATH="$HOME/.cargo/bin:$PATH"
       - rustup toolchain install nightly

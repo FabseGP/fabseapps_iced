@@ -10,7 +10,7 @@ license = "AGPL-3.0-or-later"
 [dependencies]
 iced = { version = "0", features = ["advanced", "canvas", "debug", "highlighter", "image", "tokio"] }
 reqwest = { version = "0", default-features = false, features = ["json", "rustls-tls"] }
-rfd = { version = "0" }
+rfd = { version = "0", default-features = false, features = ["tokio", "xdg-portal"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["fs"] }
 
