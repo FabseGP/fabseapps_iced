@@ -5,6 +5,7 @@ use iced::theme;
 use iced::widget::{
     button, column, container, horizontal_space, pick_list, row, text, text_editor, tooltip,
 };
+use iced::window;
 use iced::{Application, Command, Element, Font, Settings, Subscription, Theme};
 
 use std::{
@@ -40,6 +41,7 @@ enum Message {
     Save,
     FileSaved(Result<PathBuf, Error>),
     ThemeSelected(highlighter::Theme),
+    Exit,
 }
 
 impl Application for Editor {
@@ -107,6 +109,7 @@ impl Application for Editor {
                 self.theme = theme;
                 Command::none()
             }
+            Message::Exit => window::close(window::Id::MAIN),
         }
     }
 
@@ -126,6 +129,7 @@ impl Application for Editor {
                 "Save file",
                 self.is_dirty.then_some(Message::Save)
             ),
+            button("Exit").padding([10, 20]).on_press(Message::Exit),
             horizontal_space(),
             pick_list(
                 highlighter::Theme::ALL,
