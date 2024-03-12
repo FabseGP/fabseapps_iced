@@ -28,8 +28,16 @@ struct Editor {
     path: Option<PathBuf>,
     content: text_editor::Content,
     error: Option<Error>,
-    theme: highlighter::Theme,
+    app_theme: Theme,
+    highlighter_theme: highlighter::Theme,
     is_dirty: bool,
+    scale: f64,
+}
+
+#[derive(Debug, Clone)]
+enum Error {
+    DialogClosed,
+    IOFailed(io::ErrorKind),
 }
 
 #[derive(Debug, Clone)]
@@ -40,8 +48,11 @@ enum Message {
     FileOpened(Result<(PathBuf, Arc<String>), Error>),
     Save,
     FileSaved(Result<PathBuf, Error>),
-    ThemeSelected(highlighter::Theme),
+    HighlighterThemeSelected(highlighter::Theme),
+    AppThemeSelected(Theme),
     Exit,
+    ZoomIn,
+    ZoomOut,
 }
 
 impl Application for Editor {
@@ -56,15 +67,17 @@ impl Application for Editor {
                 path: None,
                 content: text_editor::Content::new(),
                 error: None,
-                theme: highlighter::Theme::SolarizedDark,
+                highlighter_theme: highlighter::Theme::SolarizedDark,
+                app_theme: Theme::CatppuccinMocha,
                 is_dirty: true,
+                scale: 1.0,
             },
-            Command::perform(load_file(default_file()), Message::FileOpened),
+            Command::none(),
         )
     }
 
     fn title(&self) -> String {
-        String::from("Fabsemangaka")
+        String::from("Fabseediter")
     }
 
     fn update(&mut self, message: Message) -> Command<Message> {
@@ -94,28 +107,44 @@ impl Application for Editor {
             }
             Message::FileSaved(Ok(path)) => {
                 self.path = Some(path);
+                self.is_dirty = false;
                 Command::none()
             }
             Message::FileSaved(Err(error)) => {
                 self.error = Some(error);
-                self.is_dirty = false;
                 Command::none()
             }
             Message::FileOpened(Err(error)) => {
                 self.error = Some(error);
                 Command::none()
             }
-            Message::ThemeSelected(theme) => {
-                self.theme = theme;
+            Message::HighlighterThemeSelected(theme) => {
+                self.highlighter_theme = theme;
+                Command::none()
+            }
+            Message::AppThemeSelected(theme) => {
+                self.app_theme = theme;
                 Command::none()
             }
             Message::Exit => window::close(window::Id::MAIN),
+            Message::ZoomIn => {
+                self.scale = self.scale * 1.1;
+                Command::none()
+            }
+            Message::ZoomOut => {
+                self.scale = self.scale * 0.9;
+                Command::none()
+            }
         }
     }
 
     fn subscription(&self) -> Subscription<Message> {
         keyboard::on_key_press(|key_code, modifiers| match key_code.as_ref() {
+            keyboard::Key::Character("n") if modifiers.command() => Some(Message::New),
             keyboard::Key::Character("s") if modifiers.command() => Some(Message::Save),
+            keyboard::Key::Character("w") if modifiers.command() => Some(Message::Exit),
+            keyboard::Key::Character("+") if modifiers.command() => Some(Message::ZoomIn),
+            keyboard::Key::Character("-") if modifiers.command() => Some(Message::ZoomOut),
             _ => None,
         })
     }
@@ -129,12 +158,16 @@ impl Application for Editor {
                 "Save file",
                 self.is_dirty.then_some(Message::Save)
             ),
-            button("Exit").padding([10, 20]).on_press(Message::Exit),
             horizontal_space(),
             pick_list(
                 highlighter::Theme::ALL,
-                Some(self.theme),
-                Message::ThemeSelected
+                Some(self.highlighter_theme),
+                Message::HighlighterThemeSelected
+            ),
+            pick_list(
+                Theme::ALL,
+                Some(self.app_theme.clone()),
+                Message::AppThemeSelected
             )
         ]
         .spacing(10);
@@ -142,7 +175,7 @@ impl Application for Editor {
             .on_action(Message::Edit)
             .highlight::<Highlighter>(
                 highlighter::Settings {
-                    theme: self.theme,
+                    theme: self.highlighter_theme,
                     extension: self
                         .path
                         .as_ref()
@@ -173,11 +206,11 @@ impl Application for Editor {
     }
 
     fn theme(&self) -> Theme {
-        if self.theme.is_dark() {
-            Theme::CatppuccinMocha
-        } else {
-            Theme::Light
-        }
+        self.app_theme.clone()
+    }
+
+    fn scale_factor(&self) -> f64 {
+        self.scale
     }
 }
 
@@ -220,13 +253,10 @@ fn icon<'a>(codepoint: char) -> Element<'a, Message> {
     text(codepoint).font(ICON_FONT).into()
 }
 
-fn default_file() -> PathBuf {
-    PathBuf::from(format!("{}/src/main.rs", env!("CARGO_MANIFEST_DIR")))
-}
-
 async fn pick_file() -> Result<(PathBuf, Arc<String>), Error> {
     let handle = rfd::AsyncFileDialog::new()
         .set_title("Choose a text file...")
+        //  .add_filter("text", &["txt", "rs", "c", "cpp", "md", "h", "sh", "toml", "yaml", "config"])
         .pick_file()
         .await
         .ok_or(Error::DialogClosed)?;
@@ -258,11 +288,6 @@ async fn save_file(path: Option<PathBuf>, text: String) -> Result<PathBuf, Error
     tokio::fs::write(&path, text)
         .await
         .map_err(|error| Error::IOFailed(error.kind()))?;
-    Ok(path)
-}
 
-#[derive(Debug, Clone)]
-enum Error {
-    DialogClosed,
-    IOFailed(io::ErrorKind),
+    Ok(path)
 }

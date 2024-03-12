@@ -7,21 +7,23 @@ steps:
     image: debian:sid-slim
     commands:
       - apt-get update
-      - apt-get install -y curl libxkbcommon-dev mold build-essential lld clang llvm
+      - apt-get install -y curl libxkbcommon-dev mold build-essential lld clang llvm mingw-w64
       - curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
       - export PATH="$HOME/.cargo/bin:$PATH"
       - rustup toolchain install nightly
       - rustup default nightly
-      - rustup target add x86_64-pc-windows-msvc
+      - rustup target add x86_64-pc-windows-msvc x86_64-pc-windows-gnu
       - rustup component add llvm-tools-preview
       - cargo install cargo-xwin cargo-pgo
       - cd text_editor
       - mkdir target
       - cp -r pgo-profiles target
       - cargo pgo optimize
-      - mv target/x86_64-unknown-linux-gnu/release/fabseeditor ../fabseeditor_${CI_COMMIT_TAG}
+      - mv target/x86_64-unknown-linux-gnu/release/fabseeditor ../fabseeditor_${CI_COMMIT_TAG}_linux
       - cargo xwin build --target x86_64-pc-windows-msvc --release
-      - mv target/x86_64-pc-windows-msvc/release/fabseeditor.exe ../fabseeditor_${CI_COMMIT_TAG}.exe
+      - mv target/x86_64-pc-windows-msvc/release/fabseeditor.exe ../fabseeditor_${CI_COMMIT_TAG}_msvc.exe
+      - cargo build --target=x86_64-pc-windows-gnu --release
+      - mv target/x86_64-pc-windows-gnu/release/fabseeditor.exe ../fabseeditor_${CI_COMMIT_TAG}_gnu.exe
 
   release:
     image: woodpeckerci/plugin-gitea-release
@@ -29,8 +31,9 @@ steps:
       base_url: https://codeberg.org
       file_exists: overwrite
       files:
-        - "fabseeditor_${CI_COMMIT_TAG}"
-        - "fabseeditor_${CI_COMMIT_TAG}.exe"
+        - "fabseeditor_${CI_COMMIT_TAG}_linux"
+        - "fabseeditor_${CI_COMMIT_TAG}_msvc.exe"
+        - "fabseeditor_${CI_COMMIT_TAG}_gnu.exe"
       checksum: sha256
       api_key:
         from_secret: FABSEGIT_RELEASE

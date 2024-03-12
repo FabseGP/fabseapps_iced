@@ -4,7 +4,7 @@ edition = "2021"
 name = "fabseeditor"
 authors = ["Fabian Grant Petrus"]
 description = "A rudimentary text-editor with syntax-highlighting"
-repository = "https://codeberg.org/fabseman/fabseapp_iced"
+repository = "https://codeberg.org/fabseman/fabseapps_iced"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
