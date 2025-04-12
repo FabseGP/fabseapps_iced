@@ -1,0 +1,20 @@
+[package]
+name = "fabsemanga"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0", features = ['serde'] }
+fastrand = "2"
+iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "image", "multi-window", "tokio"] }
+notify-rust = "4"
+rfd = { version = "0", default-features = false, features = ["tokio", "xdg-portal"] }
+reqwest = { version = "0", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true

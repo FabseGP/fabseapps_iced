@@ -1,0 +1,23 @@
+[package]
+name = "fabsemangareader"
+edition = "2021"
+version = "0.0.2"
+authors = ["Fabian Grant Petrus"]
+description = "A rudimentary text-editor with syntax-highlighting"
+license = "AGPL-3.0-or-later"
+repository = "https://codeberg.org/fabseman/fabseapps_iced"
+
+[dependencies]
+iced = { git = "https://github.com/iced-rs/iced", features = ["advanced", "image", "tokio"] }
+notify-rust = { version = "4", features = ["async"] }
+reqwest = { version = "0", default-features = false, features = ["json", "rustls-tls"] }
+rfd = { version = "0", default-features = false, features = ["tokio", "xdg-portal"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+panic = "abort"
+strip = true
